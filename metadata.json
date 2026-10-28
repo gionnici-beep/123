@@ -1,0 +1,6 @@
+{
+  "name": "Gestione Turni Reperibilità 2027-2028",
+  "description": "Applicazione professionale per l'organizzazione e pianificazione delle turnazioni dei reperibili dal 5 gennaio 2027 a fine gennaio 2028, con cambi turno nei soli giorni feriali alle ore 09:00 e limite di massimo 6 giornate mensili.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
