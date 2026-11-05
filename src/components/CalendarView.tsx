@@ -235,14 +235,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       {/* Calendar Grid */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         {/* Week headers */}
-        <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50 text-center">
+        <div className="grid grid-cols-7 border-b-2 border-slate-300 bg-slate-100 text-center font-bold">
           {weekHeaders.map((dayName, idx) => {
             const isWeekendCol = idx >= 5;
             return (
               <div
                 key={dayName}
-                className={`py-2.5 text-xs font-bold uppercase tracking-wider ${
-                  isWeekendCol ? 'text-amber-700 bg-amber-50/50' : 'text-slate-600'
+                className={`py-3 text-xs font-black uppercase tracking-wider ${
+                  isWeekendCol ? 'text-amber-800 bg-amber-100/60' : 'text-slate-800'
                 }`}
               >
                 <span className="hidden sm:inline">{dayName}</span>
@@ -253,10 +253,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         </div>
 
         {/* Days grid */}
-        <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-100">
+        <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-200">
           {/* Empty cells before first day */}
           {Array.from({ length: startDayOfWeek }).map((_, i) => (
-            <div key={`empty-${i}`} className="min-h-28 bg-slate-50/40 p-2 text-slate-300 text-xs">
+            <div key={`empty-${i}`} className="min-h-28 bg-slate-50/60 p-2 text-slate-300 text-xs font-bold">
               {/* Prior month trailing */}
             </div>
           ))}
@@ -281,30 +281,30 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             const isBeforeScheduleStart = year === 2027 && month === 0 && dayNum < 5;
 
             // Day cell background according to variation
-            let cellBg = 'bg-emerald-50/50 hover:bg-emerald-100/50'; // feriale verde chiaro
+            let cellBg = 'bg-emerald-50/70 hover:bg-emerald-100/70'; // feriale verde chiaro
             let dayNumColor = 'text-emerald-950';
 
             if (holidayName) {
-              cellBg = 'bg-sky-50/90 border border-sky-200/70'; // festivita celeste
-              dayNumColor = 'text-sky-900';
+              cellBg = 'bg-sky-100/90 border border-sky-300'; // festivita celeste
+              dayNumColor = 'text-sky-950';
             } else if (dayOfWeek === 0) {
-              cellBg = 'bg-rose-50/80 border border-rose-200/60'; // domenica rosso chiaro
-              dayNumColor = 'text-rose-900';
+              cellBg = 'bg-rose-100/80 border border-rose-300'; // domenica rosso chiaro
+              dayNumColor = 'text-rose-950';
             } else if (dayOfWeek === 6) {
-              cellBg = 'bg-yellow-50/80 border border-yellow-200/60'; // sabato giallo
-              dayNumColor = 'text-yellow-900';
+              cellBg = 'bg-yellow-100/80 border border-yellow-300'; // sabato giallo
+              dayNumColor = 'text-yellow-950';
             }
 
             return (
               <div
                 key={`day-${dayNum}`}
-                className={`min-h-32 p-2 flex flex-col justify-between transition-colors relative group ${cellBg}`}
+                className={`min-h-32 p-2.5 flex flex-col justify-between transition-colors relative group font-bold ${cellBg}`}
               >
                 {/* Header row of day cell */}
-                <div className="flex items-start justify-between gap-1 mb-1">
+                <div className="flex items-start justify-between gap-1 mb-1 font-bold">
                   <div className="flex items-center gap-1.5">
                     <span
-                      className={`text-sm font-bold tabular-nums ${dayNumColor}`}
+                      className={`text-base font-black tabular-nums drop-shadow-2xs ${dayNumColor}`}
                     >
                       {dayNum}
                     </span>
@@ -312,7 +312,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     {/* Holiday badge in celeste */}
                     {holidayName && (
                       <span
-                        className="text-[10px] font-semibold text-sky-900 bg-sky-100/90 border border-sky-200 px-1.5 py-0.2 rounded-xs truncate max-w-28"
+                        className="text-[10px] font-black text-sky-950 bg-sky-200 border border-sky-400 px-1.5 py-0.5 rounded truncate max-w-28 shadow-2xs"
                         title={holidayName}
                       >
                         {holidayName}
@@ -322,47 +322,47 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
                   {/* Feriale indicator or pre-schedule note */}
                   {isBeforeScheduleStart ? (
-                    <span className="text-[10px] text-slate-400">Ante 5 Gen</span>
+                    <span className="text-[10px] font-bold text-slate-500">Ante 5 Gen</span>
                   ) : isFerialeDay ? (
-                    <span className="text-[10px] text-slate-400 hidden sm:inline">feriale</span>
+                    <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider hidden sm:inline">feriale</span>
                   ) : null}
                 </div>
 
                 {/* Handover indicator (Cambio Turno at 09:00) */}
                 {isStartDay && incomingShift && (
-                  <div className="mb-1.5 p-1 rounded-sm bg-blue-50 border border-blue-200 text-[10px] text-blue-900 flex items-center justify-between">
-                    <span className="font-bold flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                      09:00 ⇄ Cambio
+                  <div className="mb-1.5 p-1 rounded bg-blue-100 border border-blue-400 text-[10px] text-blue-950 font-black flex items-center justify-between shadow-2xs">
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-blue-700 animate-pulse"></span>
+                      09:00 ⇄ CAMBIO
                     </span>
-                    <span className="font-mono text-[9px] text-blue-600">#{incomingShift.shiftNumber}</span>
+                    <span className="font-mono text-[10px] text-blue-800 font-black">#{incomingShift.shiftNumber}</span>
                   </div>
                 )}
 
                 {/* Main Operator Duty on this day */}
-                <div className="flex-1 flex flex-col justify-center my-0.5">
+                <div className="flex-1 flex flex-col justify-center my-0.5 font-bold">
                   {currentOp && shift ? (
                     <div
                       onClick={() => onSelectShift(shift)}
-                      className="cursor-pointer p-1.5 rounded-md border text-left transition-all hover:shadow-xs group-hover:border-slate-300"
+                      className="cursor-pointer p-2 rounded-lg border-2 text-left transition-all hover:shadow-md group-hover:border-slate-400 font-bold"
                       style={{
                         backgroundColor: currentOp.bgColor,
-                        borderColor: `${currentOp.color}40`,
+                        borderColor: `${currentOp.color}60`,
                       }}
                     >
                       <div className="flex items-center justify-between gap-1">
                         <span
-                          className="text-xs font-bold truncate"
+                          className="text-xs font-black truncate tracking-wide"
                           style={{ color: currentOp.textColor }}
                         >
                           {currentOp.name}
                         </span>
                       </div>
-                      <p className="text-[10px] text-slate-500 truncate mt-0.5">
+                      <p className="text-[10px] font-bold text-slate-700 truncate mt-0.5">
                         {currentOp.role}
                       </p>
-                      <div className="flex items-center justify-between text-[10px] text-slate-500 mt-1 pt-1 border-t border-slate-200/50">
-                        <span className="font-mono font-medium">
+                      <div className="flex items-center justify-between text-[10px] text-slate-700 mt-1 pt-1 border-t border-slate-300">
+                        <span className="font-mono font-black text-slate-900">
                           Turno #{shift.shiftNumber} ({shift.durationDays} gg)
                         </span>
                         <button
@@ -371,32 +371,32 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                             onOpenSwap(shift);
                           }}
                           title="Scambia questo turno con un collega"
-                          className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-500 hover:text-blue-600 rounded transition-opacity"
+                          className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-600 hover:text-blue-700 rounded transition-opacity"
                         >
-                          <ArrowRightLeft className="w-3 h-3" />
+                          <ArrowRightLeft className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
                   ) : isBeforeScheduleStart ? (
-                    <div className="h-full flex items-center justify-center text-[11px] text-slate-400 italic">
+                    <div className="h-full flex items-center justify-center text-[11px] font-bold text-slate-500 italic">
                       Inizio turni: 5 Gen 09:00
                     </div>
                   ) : (
-                    <div className="h-full flex items-center justify-center text-[11px] text-slate-300">
+                    <div className="h-full flex items-center justify-center text-[11px] font-bold text-slate-400">
                       —
                     </div>
                   )}
                 </div>
 
                 {/* Footer notes */}
-                <div className="text-[9px] text-slate-400 flex items-center justify-between mt-1">
+                <div className="text-[10px] font-black flex items-center justify-between mt-1">
                   {shift?.isWeekendShift && isWeekendDay ? (
-                    <span className="text-amber-700 font-medium">Reperibilità Weekend</span>
+                    <span className="text-amber-900 bg-amber-100/90 px-1 py-0.2 rounded border border-amber-300">Weekend</span>
                   ) : (
                     <span></span>
                   )}
                   {shift?.hasHoliday && holidayName && (
-                    <span className="text-rose-600 font-medium">Reperibilità Festivo</span>
+                    <span className="text-rose-900 bg-rose-100/90 px-1 py-0.2 rounded border border-rose-300">Festivo</span>
                   )}
                 </div>
               </div>

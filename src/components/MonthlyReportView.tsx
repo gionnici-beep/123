@@ -488,12 +488,12 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
                               key={dayObj.dateStr}
                               className="divide-x divide-slate-800"
                             >
-                              {/* Colonna Data: cambio turno verde bold */}
+                              {/* Colonna Data */}
                               <td
                                 style={borderBottomStyle}
-                                className={`py-1.5 px-2.5 text-[11px] whitespace-nowrap border-b border-slate-400 ${dateBgClass}`}
+                                className={`py-1.5 px-3 font-mono text-[11px] border-b border-slate-400 whitespace-nowrap ${dateBgClass}`}
                               >
-                                <div className="flex items-center justify-between gap-1">
+                                <div className="flex items-center justify-between gap-1.5">
                                   <span
                                     className={
                                       dayObj.isHandover
@@ -650,35 +650,13 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
                                                 shiftNumber: shift.shiftNumber,
                                                 autoFormula,
                                               });
-                                              setCustomNoteInput(noteText);
+                                              setCustomNoteInput('');
                                             }}
-                                            className="text-[10px] text-slate-500 hover:text-red-700 font-sans inline-flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+                                            className="text-[9px] text-slate-400 hover:text-red-700 underline font-sans opacity-0 group-hover/note:opacity-100 transition-opacity cursor-pointer"
                                           >
-                                            <Edit3 className="w-2.5 h-2.5" />
-                                            <span>Inserisci testo libero</span>
+                                            + Aggiungi testo libero
                                           </button>
                                         )
-                                      )}
-
-                                      {hasOverrides && shift.dailyOverrides && !hasCustomNote && (
-                                        <div className="mt-1 pt-1 border-t border-amber-200 text-[10px] text-amber-950 bg-amber-50 p-1.5 rounded">
-                                          <strong className="text-amber-900 block font-semibold mb-0.5">
-                                            Dettaglio sostituzioni:
-                                          </strong>
-                                          {Object.entries(shift.dailyOverrides).map(([dt, ov]) => {
-                                            const subOp = opMap.get(ov.operatorId);
-                                            return (
-                                              <div key={dt} className="flex items-center justify-between py-0.5">
-                                                <span>
-                                                  {dt.slice(8)}/{dt.slice(5, 7)}: <strong>{subOp?.name}</strong>
-                                                </span>
-                                                <span className="italic text-amber-800">
-                                                  ({ov.reason || 'Malattia'})
-                                                </span>
-                                              </div>
-                                            );
-                                          })}
-                                        </div>
                                       )}
                                     </div>
                                   </td>
@@ -688,169 +666,110 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
                           );
                         })}
 
-                        {/* 2. DEDICATO ALL'ULTIMA GIORNATA DEL REPORT:
-                            "Report dirigenti: tutta la riga (tutte le celle) dell'ultima giornata va evidenziata sopra la data e sotto la data con doppio bordo rosso, non solo sotto ma anche sopra"
-                            "ad esempio:la data del 02/02/27 è una RIGA da evidenziare con doppio bordo rosso, sia sotto che con il confine con quella del 01/02/27" */}
+                        {/* 2. DEDICATED ROW FOR LAST CALENDAR DAY */}
                         {lastDayObj && (
                           <tr
                             key={lastDayObj.dateStr}
+                            style={{
+                              borderTop: '3px double #DC2626',
+                              borderBottom: '3px double #DC2626',
+                            }}
                             className="divide-x divide-slate-800"
                           >
-                            {/* Cella 1: Data (con doppio bordo rosso superiore e inferiore) */}
-                            <td
-                              style={{
-                                borderTop: '3px double #DC2626',
-                                borderBottom: '3px double #DC2626',
-                              }}
-                              className={`py-2 px-2.5 text-[11px] whitespace-nowrap ${
-                                lastDayObj.holiday
-                                  ? 'bg-[#BAE6FD] text-[#0C4A6E] font-bold'
-                                  : lastDayObj.isSunday
-                                  ? 'bg-[#FEE2E2] text-[#991B1B] font-bold'
-                                  : lastDayObj.isSaturday
-                                  ? 'bg-[#FEF08A] text-[#713F12] font-bold'
-                                  : 'bg-[#DCFCE7] text-[#14532D]'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between gap-1">
-                                <span className="text-emerald-700 font-bold underline decoration-emerald-600">
-                                  {formatOfficialDayLabel(lastDayObj.date)}
-                                </span>
-                                <span className="text-[9px] font-mono px-1 py-0.2 bg-emerald-700 text-white rounded font-bold">
-                                  09:00
-                                </span>
-                              </div>
-                            </td>
+                            {(() => {
+                              let dateBgClass = 'bg-[#DCFCE7] text-[#14532D]';
+                              let festBgClass = 'bg-[#DCFCE7]';
 
-                            {/* Cella 2: Festività (con doppio bordo rosso superiore e inferiore) */}
-                            <td
-                              style={{
-                                borderTop: '3px double #DC2626',
-                                borderBottom: '3px double #DC2626',
-                              }}
-                              className={`py-2 px-2.5 text-[10px] ${
-                                lastDayObj.holiday
-                                  ? 'bg-[#BAE6FD] text-[#0C4A6E] font-bold'
-                                  : lastDayObj.isSunday
-                                  ? 'bg-[#FEE2E2]'
-                                  : lastDayObj.isSaturday
-                                  ? 'bg-[#FEF08A]'
-                                  : 'bg-[#DCFCE7]'
-                              }`}
-                            >
-                              {lastDayObj.holiday || ''}
-                            </td>
-
-                            {/* Cella 3: SOR - BIANCA (con doppio bordo rosso superiore e inferiore) */}
-                            <td
-                              style={{
-                                borderTop: '3px double #DC2626',
-                                borderBottom: '3px double #DC2626',
-                                backgroundColor: '#FFFFFF',
-                              }}
-                              onClick={() => onSelectShift?.(shift)}
-                              className={`py-2 px-3 text-center align-middle font-bold text-xs bg-white text-slate-900 ${
-                                onSelectShift ? 'cursor-pointer hover:bg-slate-50' : ''
-                              }`}
-                              title={
-                                onSelectShift
-                                  ? 'Clicca per modificare o inserire variazioni/sostituzioni su questo turno'
-                                  : undefined
+                              if (lastDayObj.holiday) {
+                                dateBgClass = 'bg-[#BAE6FD] text-[#0C4A6E] font-bold';
+                                festBgClass = 'bg-[#BAE6FD] text-[#0C4A6E] font-bold';
+                              } else if (lastDayObj.isSunday) {
+                                dateBgClass = 'bg-[#FEE2E2] text-[#991B1B] font-bold';
+                                festBgClass = 'bg-[#FEE2E2]';
+                              } else if (lastDayObj.isSaturday) {
+                                dateBgClass = 'bg-[#FEF08A] text-[#713F12] font-bold';
+                                festBgClass = 'bg-[#FEF08A]';
                               }
-                            >
-                              <div className="space-y-0.5">
-                                <div className="font-bold text-xs uppercase text-slate-950">
-                                  {sorOp?.name || ''}
-                                </div>
-                                <div className="text-[9.5px] text-slate-500 font-mono">
-                                  fino ore 09:00 (fine turno #{String(shift.shiftNumber).padStart(2, '0')})
-                                </div>
-                              </div>
-                            </td>
 
-                            {/* Cella 4: CF - BIANCA (con doppio bordo rosso superiore e inferiore) */}
-                            <td
-                              style={{
+                              const doubleRedCell: React.CSSProperties = {
                                 borderTop: '3px double #DC2626',
                                 borderBottom: '3px double #DC2626',
-                                backgroundColor: '#FFFFFF',
-                              }}
-                              className="py-2 px-3 text-center align-middle text-xs bg-white text-slate-900 font-medium"
-                            >
-                              <div className="font-semibold text-xs text-slate-900">
-                                {cfOp?.name || 'Laureti Barbara'}
-                              </div>
-                              <div className="text-[9.5px] text-slate-500">fino ore 09:00</div>
-                            </td>
+                              };
 
-                            {/* Cella 5: VAL - BIANCA (con doppio bordo rosso superiore e inferiore) */}
-                            <td
-                              style={{
-                                borderTop: '3px double #DC2626',
-                                borderBottom: '3px double #DC2626',
-                                backgroundColor: '#FFFFFF',
-                              }}
-                              className="py-2 px-3 text-center align-middle text-xs bg-white text-slate-900 font-medium"
-                            >
-                              <div className="font-semibold text-xs text-slate-900">
-                                {valOp?.name || 'Canonico Andrea'}
-                              </div>
-                              <div className="text-[9.5px] text-slate-500">fino ore 09:00</div>
-                            </td>
+                              return (
+                                <>
+                                  <td
+                                    style={doubleRedCell}
+                                    className={`py-2 px-3 font-mono text-[11px] whitespace-nowrap ${dateBgClass}`}
+                                  >
+                                    <div className="flex items-center justify-between gap-1.5">
+                                      <span className="text-emerald-700 font-bold underline decoration-emerald-600">
+                                        {formatOfficialDayLabel(lastDayObj.date)}
+                                      </span>
+                                      <span className="text-[9px] font-mono px-1 py-0.2 bg-emerald-700 text-white rounded font-bold">
+                                        09:00
+                                      </span>
+                                    </div>
+                                  </td>
 
-                            {/* Cella 6: CT - BIANCA (con doppio bordo rosso superiore e inferiore) */}
-                            <td
-                              style={{
-                                borderTop: '3px double #DC2626',
-                                borderBottom: '3px double #DC2626',
-                                backgroundColor: '#FFFFFF',
-                              }}
-                              className="py-2 px-3 text-center align-middle text-xs bg-white text-slate-900 font-medium"
-                            >
-                              <div className="font-semibold text-xs text-slate-900">
-                                {ctOp?.name || 'Motti Andrea'}
-                              </div>
-                              <div className="text-[9.5px] text-slate-500">fino ore 09:00</div>
-                            </td>
+                                  <td
+                                    style={doubleRedCell}
+                                    className={`py-2 px-2.5 text-[10px] ${festBgClass}`}
+                                  >
+                                    {lastDayObj.holiday || ''}
+                                  </td>
 
-                            {/* Cella 7: LV - BIANCA (con doppio bordo rosso superiore e inferiore) */}
-                            <td
-                              style={{
-                                borderTop: '3px double #DC2626',
-                                borderBottom: '3px double #DC2626',
-                                backgroundColor: '#FFFFFF',
-                              }}
-                              className="py-2 px-3 text-center align-middle text-xs bg-white text-slate-900 font-medium"
-                            >
-                              <div className="font-semibold text-xs text-slate-900">
-                                {lvOp?.name || 'Pasquetti Michele'}
-                              </div>
-                              <div className="text-[9.5px] text-slate-500">fino ore 09:00</div>
-                            </td>
+                                  <td
+                                    style={doubleRedCell}
+                                    className="py-2 px-3 text-center align-middle font-bold text-xs bg-white text-slate-900"
+                                  >
+                                    <div className="font-bold text-sm text-slate-950 uppercase">
+                                      {sorOp?.name || ''}
+                                    </div>
+                                    <div className="text-[9px] text-slate-500 font-mono">fino ore 09:00</div>
+                                  </td>
 
-                            {/* Cella 8: NOTE - BIANCA (con doppio bordo rosso superiore e inferiore) */}
-                            <td
-                              style={{
-                                borderTop: '3px double #DC2626',
-                                borderBottom: '3px double #DC2626',
-                                backgroundColor: '#FFFFFF',
-                              }}
-                              className="py-2 px-3.5 align-middle text-[11px] text-slate-800 bg-white leading-snug"
-                            >
-                              <div className="space-y-1">
-                                <span className="font-mono text-[11px] font-semibold text-slate-900 block">
-                                  {hasCustomNote
-                                    ? noteText
-                                    : 'Passaggio consegne ore 09:00 — Fine periodo rendicontazione'}
-                                </span>
-                                {hasCustomNote && (
-                                  <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-blue-800 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded font-sans">
-                                    <MessageSquare className="w-2.5 h-2.5" />
-                                    Testo libero
-                                  </span>
-                                )}
-                              </div>
-                            </td>
+                                  <td
+                                    style={doubleRedCell}
+                                    className="py-2 px-3 text-center align-middle text-xs bg-white text-slate-900 font-medium"
+                                  >
+                                    <div>{cfOp?.name || 'Laureti Barbara'}</div>
+                                    <div className="text-[9px] text-slate-500 font-mono">fino ore 09:00</div>
+                                  </td>
+
+                                  <td
+                                    style={doubleRedCell}
+                                    className="py-2 px-3 text-center align-middle text-xs bg-white text-slate-900 font-medium"
+                                  >
+                                    <div>{valOp?.name || 'Canonico Andrea'}</div>
+                                    <div className="text-[9px] text-slate-500 font-mono">fino ore 09:00</div>
+                                  </td>
+
+                                  <td
+                                    style={doubleRedCell}
+                                    className="py-2 px-3 text-center align-middle text-xs bg-white text-slate-900 font-medium"
+                                  >
+                                    <div>{ctOp?.name || 'Motti Andrea'}</div>
+                                    <div className="text-[9px] text-slate-500 font-mono">fino ore 09:00</div>
+                                  </td>
+
+                                  <td
+                                    style={doubleRedCell}
+                                    className="py-2 px-3 text-center align-middle text-xs bg-white text-slate-900 font-medium"
+                                  >
+                                    <div>{lvOp?.name || 'Pasquetti Michele'}</div>
+                                    <div className="text-[9px] text-slate-500 font-mono">fino ore 09:00</div>
+                                  </td>
+
+                                  <td
+                                    style={doubleRedCell}
+                                    className="py-2 px-3.5 align-middle text-[11px] text-slate-600 bg-white italic font-mono"
+                                  >
+                                    Passaggio consegne ore 09:00 — Fine periodo rendicontazione
+                                  </td>
+                                </>
+                              );
+                            })()}
                           </tr>
                         )}
                       </React.Fragment>
@@ -860,198 +779,153 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
               </table>
             </div>
 
-            {/* Bottom section matching the official PDF */}
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-              {/* Left Box: NB instructions */}
-              <div className="border border-slate-900 p-4 bg-slate-50 text-xs text-slate-800 space-y-2">
-                <p className="font-bold text-slate-950 uppercase tracking-wide text-[11px]">
-                  Nota Operativa di Servizio (NB):
+            {/* Bottom Section: Notes & Summary of Shifts in Period */}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-300">
+              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2 text-xs">
+                <p className="font-bold text-slate-800">
+                  Note per la rendicontazione amministrativa:
                 </p>
-                <p className="leading-relaxed">
-                  Il turno di reperibilità, salvo diversa indicazione, <strong>inizia e termina alle ore 09:00 delle giornate evidenziate</strong>.
+                <p className="text-slate-600 leading-relaxed">
+                  Il turno di reperibilità, salvo diversa espressa indicazione, inizia e termina alle ore 09:00 delle giornate feriali evidenziate.
                 </p>
-                <p className="text-[11px] text-slate-600">
-                  I cambi turno avvengono rigorosamente nei giorni feriali lavorativi. Non sono ammessi cambi turno in giornate di sabato, domenica o festività infrasettimanali. Copertura garantita per tutti e 5 gli Ambiti (SOR, CF, VAL, CT, LV).
+                <p className="text-slate-600 leading-relaxed">
+                  Tutti gli operatori inseriti nel presente report rispettano il tetto contrattuale massimo di 6 giornate mensili nel proprio Ambito di competenza.
                 </p>
               </div>
 
-              {/* Right Box: Sub-table Turni reperibilità mese */}
-              <div className="border border-slate-900 overflow-hidden">
-                <div className="bg-slate-200 text-slate-900 font-bold text-center py-1.5 px-3 text-xs border-b border-slate-900">
-                  Turni reperibilità mese di {currentMonthObj.label.toLowerCase()}
+              <div className="border border-slate-300 rounded-lg overflow-hidden text-xs">
+                <div className="bg-slate-100 font-bold text-slate-800 px-3 py-2 border-b border-slate-300 flex items-center justify-between">
+                  <span>Turni di reperibilità del periodo ({currentMonthObj.label})</span>
+                  <span className="font-mono text-[10px] text-slate-500">
+                    {monthlyReportShifts.length} turni · {totalReportDays} gg totali
+                  </span>
                 </div>
-                <table className="w-full text-xs text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-100 text-[11px] text-slate-700 border-b border-slate-800 divide-x divide-slate-800">
-                      <th colSpan={2} className="py-1 px-3 text-center">Dalle ore</th>
-                      <th colSpan={2} className="py-1 px-3 text-center">Alle ore</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-300">
-                    {monthlyReportShifts.map((s) => {
-                      const sStart = new Date(s.startDate);
-                      const sEnd = new Date(s.endDate);
-                      return (
-                        <tr key={s.id} className="divide-x divide-slate-300 text-[11px]">
-                          <td className="py-1 px-2.5 text-center font-bold text-slate-600 w-16">
-                            9:00 di
-                          </td>
-                          <td className="py-1 px-3 font-semibold text-emerald-800">
-                            {formatShortOfficialDate(sStart)}
-                          </td>
-                          <td className="py-1 px-2.5 text-center font-bold text-slate-600 w-16">
-                            9:00 di
-                          </td>
-                          <td className="py-1 px-3 font-semibold text-emerald-800">
-                            {formatShortOfficialDate(sEnd)}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                <div className="divide-y divide-slate-200 max-h-48 overflow-y-auto">
+                  {monthlyReportShifts.map((s) => {
+                    const sStart = new Date(s.startDate);
+                    const sEnd = new Date(s.endDate);
+                    const sorOp = s.assignments?.SOR
+                      ? opMap.get(s.assignments.SOR.operatorId)
+                      : opMap.get(s.operatorId);
+
+                    return (
+                      <div
+                        key={s.id}
+                        className="p-2.5 flex items-center justify-between hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-slate-700">
+                            #{String(s.shiftNumber).padStart(2, '0')}
+                          </span>
+                          <span className="font-semibold text-slate-900">{sorOp?.name}</span>
+                        </div>
+                        <div className="font-mono text-[11px] text-slate-600">
+                          dalle 09:00 del <strong className="text-emerald-700">{formatShortDate(s.startDate)}</strong> alle 09:00 del <strong className="text-emerald-700">{formatShortDate(s.endDate)}</strong>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
-            {/* Official Footer matching PDF */}
-            <div className="mt-8 pt-4 border-t border-slate-300 flex items-center justify-between text-[10px] text-slate-500 font-mono">
-              <div>
-                Rendicontazione turno: primo turno avviato fino all'ultimo a cavallo · Ambiti: SOR, CF, VAL, CT, LV
-              </div>
-              <div>
-                {officialReportCode.replace(/\s+/g, '_')}.xlsx &nbsp;&nbsp;&nbsp;&nbsp; CG/gc
-              </div>
+            {/* Document Footer */}
+            <div className="mt-8 pt-4 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+              <div>Modello Ufficiale Protezione Civile — Regione Umbria</div>
+              <div>{officialReportCode.replace(/\s+/g, '_')}.xlsx</div>
             </div>
           </div>
         </div>
       )}
 
-      {/* TAB 2: PROSPETTO AMMINISTRATIVO & LIQUIDAZIONE CCNL (5 AMBITI) */}
+      {/* TAB 2: PROSPETTO AMMINISTRATIVO & LIQUIDAZIONE CCNL (Tetto 6 gg per ambito) */}
       {reportTab === 'summary' && (
         <div className="space-y-6">
-          {/* Corporate Scope Specification Banner */}
-          <div className="bg-slate-900 text-white rounded-xl p-5 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-red-400 font-semibold block">
-                  Criterio di Rendicontazione Amministrativa e Vincolo 6 Giornate
-                </span>
-                <p className="text-sm font-bold text-slate-100">
-                  Periodo di competenza: {currentMonthObj.label} ({officialReportCode})
-                </p>
-                <p className="text-xs text-slate-300 leading-relaxed max-w-3xl">
-                  Inclusi tutti i turni dal primo avviato a inizio mese fino all'ultimo a cavallo con il mese successivo per tutti i <strong>5 Ambiti di Reperibilità</strong> (SOR, CF, VAL, CT, LV).
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs p-6 space-y-4">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Riepilogo Giornate per Liquidazione Reperibilità (CCNL Funzioni Locali)
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Verifica automatica del rispetto del vincolo di <strong>massimo 6 giornate mensili</strong> per ciascun operatore nel proprio Ambito.
                 </p>
               </div>
 
-              <div className="text-right shrink-0 bg-slate-800 p-3.5 rounded-lg border border-slate-700">
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Turni Avviati</span>
-                <span className="text-2xl font-mono font-bold text-white tabular-nums">
-                  {monthlyReportShifts.length}
-                </span>
-                <span className="text-[11px] text-emerald-400 block mt-0.5 font-medium">
-                  {totalReportDays} giornate totali
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Ambito Filter Buttons */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            <button
-              onClick={() => setSelectedAmbitoFilter('ALL')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
-                selectedAmbitoFilter === 'ALL'
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
-              }`}
-            >
-              Tutti gli Ambiti ({operatorBreakdown.length})
-            </button>
-            {(['SOR', 'CF', 'VAL', 'CT', 'LV'] as AmbitoType[]).map((amb) => {
-              const cfg = AMBITI[amb];
-              const count = operators.filter((o) => (o.ambito === amb || (!o.ambito && amb === 'SOR')) && o.active).length;
-              return (
-                <button
-                  key={amb}
-                  onClick={() => setSelectedAmbitoFilter(amb)}
-                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
-                    selectedAmbitoFilter === amb
-                      ? 'bg-red-800 text-white shadow-xs'
-                      : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
-                  }`}
+              {/* Ambito Filter */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-slate-600">Ambito:</span>
+                <select
+                  value={selectedAmbitoFilter}
+                  onChange={(e) => setSelectedAmbitoFilter(e.target.value as 'ALL' | AmbitoType)}
+                  className="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 bg-slate-50 font-bold focus:outline-hidden focus:ring-2 focus:ring-blue-500 cursor-pointer"
                 >
-                  <span>{amb} - {cfg.fullName}</span>
-                  <span className="ml-1.5 text-[10px] opacity-80 font-mono">({count} rep.)</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* TABLE: Riepilogo Presenze e Competenze per Reperibile */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-            <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-                <UserCheck className="w-4 h-4 text-emerald-600" />
-                <span>Riepilogo Presenze e Competenze per Reperibile ({currentMonthObj.label})</span>
-              </h3>
-              <span className="text-xs text-slate-500 font-mono">
-                Tetto massimo: 6 giornate mensili per reperibile
-              </span>
+                  <option value="ALL">Tutti i 5 Ambiti</option>
+                  {(Object.keys(AMBITI) as AmbitoType[]).map((a) => (
+                    <option key={a} value={a}>
+                      {a} — {AMBITI[a].fullName}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Operator Table */}
+            <div className="overflow-x-auto border border-slate-200 rounded-lg">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-slate-100/70 text-slate-600 font-semibold uppercase text-[11px] border-b border-slate-200">
-                    <th className="py-3 px-4">Nominativo Reperibile</th>
-                    <th className="py-3 px-3">Ambito</th>
-                    <th className="py-3 px-4">Ruolo Tecnico</th>
-                    <th className="py-3 px-3 text-center">Giornate Titolare</th>
-                    <th className="py-3 px-3 text-center">Giornate in Sostituzione</th>
-                    <th className="py-3 px-3 text-center font-bold">Totale Giornate</th>
-                    <th className="py-3 px-4">Recapito Telefonico H24</th>
-                    <th className="py-3 px-4 text-center">Conformità CCNL</th>
+                  <tr className="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
+                    <th className="py-2.5 px-4">Operatore Reperibile</th>
+                    <th className="py-2.5 px-3">Ambito</th>
+                    <th className="py-2.5 px-3 text-center">Giornate Titolari</th>
+                    <th className="py-2.5 px-3 text-center">Sostituzioni Effettuate</th>
+                    <th className="py-2.5 px-3 text-center">Totale Giornate</th>
+                    <th className="py-2.5 px-4 text-center">Limite CCNL (6 gg)</th>
+                    <th className="py-2.5 px-4">Stato Liquidabilità</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {operatorBreakdown.map((item) => (
-                    <tr key={item.operator.id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="py-3 px-4 font-bold text-slate-900">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-white text-[10px]"
-                            style={{ backgroundColor: item.operator.color }}
-                          >
-                            {item.operator.name.split(' ').map((n) => n[0]).join('')}
-                          </div>
-                          <span>{item.operator.name}</span>
-                        </div>
+                  {operatorBreakdown.map((row) => (
+                    <tr
+                      key={row.operator.id}
+                      className={`hover:bg-slate-50/80 transition-colors ${
+                        row.exceeds ? 'bg-red-50/60 font-semibold text-red-950' : ''
+                      }`}
+                    >
+                      <td className="py-2.5 px-4 font-medium text-slate-900">
+                        {row.operator.name}
                       </td>
-                      <td className="py-3 px-3">
-                        <span className="inline-block px-2 py-0.5 text-[10px] font-bold rounded bg-slate-100 text-slate-800 border border-slate-200 font-mono">
-                          {item.operator.ambito || 'SOR'}
+                      <td className="py-2.5 px-3">
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            AMBITI[row.operator.ambito || 'SOR'].badgeBg
+                          } ${AMBITI[row.operator.ambito || 'SOR'].badgeText}`}
+                        >
+                          {row.operator.ambito || 'SOR'}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-slate-600">{item.operator.role}</td>
-                      <td className="py-3 px-3 text-center font-mono tabular-nums">{item.titularDays} gg</td>
-                      <td className="py-3 px-3 text-center font-mono tabular-nums text-amber-800">
-                        {item.substitutionDays > 0 ? `${item.substitutionDays} gg` : '0'}
+                      <td className="py-2.5 px-3 text-center font-mono">
+                        {row.titularDays} gg
                       </td>
-                      <td className="py-3 px-3 text-center font-mono font-bold text-slate-900 bg-slate-50 tabular-nums">
-                        {item.totalDays} gg
+                      <td className="py-2.5 px-3 text-center font-mono text-blue-700">
+                        {row.substitutionDays > 0 ? `+${row.substitutionDays} gg` : '—'}
                       </td>
-                      <td className="py-3 px-4 font-mono text-slate-700">{item.operator.phone}</td>
-                      <td className="py-3 px-4 text-center">
-                        {!item.exceeds ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                            <ShieldCheck className="w-3.5 h-3.5" />
-                            <span>Conforme (≤6 gg)</span>
+                      <td className="py-2.5 px-3 text-center font-mono font-bold text-sm">
+                        {row.totalDays} gg
+                      </td>
+                      <td className="py-2.5 px-4 text-center font-mono text-slate-500">
+                        {row.operator.maxDaysPerMonth} gg
+                      </td>
+                      <td className="py-2.5 px-4">
+                        {row.exceeds ? (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-full border border-red-300">
+                            <AlertCircle className="w-3 h-3" />
+                            <span>SUPERATO ({row.totalDays}/6 gg)</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
-                            <AlertCircle className="w-3.5 h-3.5" />
-                            <span>Eccede tetto</span>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            <span>Conforme ({row.totalDays}/6 gg)</span>
                           </span>
                         )}
                       </td>
@@ -1061,43 +935,24 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
               </table>
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Signatures Block for Department Directors */}
-          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-6">
-              Approvazione Dirigenziale per Ambito e Liquidazione Competenze
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-xs text-slate-700 pt-2 border-t border-slate-100">
-              <div>
-                <p className="font-semibold text-slate-900">Il Responsabile della Gestione Turni (SOR / Ambiti)</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Si attesta la regolarità delle prestazioni svolte</p>
-                <div className="mt-8 border-b border-dashed border-slate-300 w-60"></div>
-                <p className="text-[10px] text-slate-400 mt-1">Firma e data di trasmissione</p>
-              </div>
-
-              <div>
-                <p className="font-semibold text-slate-900">Il Dirigente Competente per Ambito</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Visto per approvazione e inoltro all'Ufficio Stipendi/HR</p>
-                <div className="mt-8 border-b border-dashed border-slate-300 w-60"></div>
-                <p className="text-[10px] text-slate-400 mt-1">Firma per visto e data di approvazione</p>
-              </div>
-            </div>
-          </div>
       {/* Modal: Inserimento Testo Libero per Campo NOTE */}
       {editingShiftNote && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 max-w-lg w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl border border-slate-200 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <span className="p-2 bg-red-100 text-red-800 rounded-lg">
-                  <Edit3 className="w-5 h-5" />
+                <span className="p-2 bg-red-100 text-red-700 rounded-lg">
+                  <Edit3 className="w-4 h-4" />
                 </span>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">
-                    Modifica Campo NOTE · Testo Libero
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Modifica Testo Campo NOTE — Turno #{editingShiftNote.shiftNumber}
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Turno #{editingShiftNote.shiftNumber} (Report Dirigenti)
+                    Inserisci testo libero personalizzato per questo turno nel report
                   </p>
                 </div>
               </div>
@@ -1112,34 +967,26 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
 
             <div className="space-y-3">
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-semibold text-slate-800">
-                    Inserisci testo libero da riportare nel report:
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setCustomNoteInput(editingShiftNote.autoFormula)}
-                    className="text-[11px] font-medium text-blue-700 hover:text-blue-900 hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <RotateCcw className="w-3 h-3" />
-                    <span>Copia formula predefinita</span>
-                  </button>
-                </div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Testo Libero Personalizzato
+                </label>
                 <textarea
                   rows={4}
                   value={customNoteInput}
                   onChange={(e) => setCustomNoteInput(e.target.value)}
-                  placeholder="Scrivi qui il testo libero della nota (es. VAL: Canonico sostituisce Tarozzi con autorizzazione Dirigente...)"
-                  className="w-full text-xs font-mono p-3 border border-slate-300 rounded-lg text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-red-600 leading-relaxed"
+                  placeholder="Es. Sostituzione concordata per emergenza idraulica; turno prolungato..."
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-red-500 font-mono"
                 />
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Questo testo apparirà esattamente nella colonna <strong>NOTE</strong> del Report Dirigenti e nel file Excel esportato.
-                </p>
               </div>
 
-              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-600">
-                <span className="font-semibold text-slate-700 block mb-0.5">Formula automatica di sistema:</span>
-                <span className="font-mono text-[11px] text-slate-800 break-words">{editingShiftNote.autoFormula}</span>
+              <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs">
+                <div className="font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                  <MessageSquare className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Formula Automatica di Default:</span>
+                </div>
+                <div className="font-mono text-[11px] text-slate-600 bg-white p-2 rounded border border-slate-200">
+                  {editingShiftNote.autoFormula}
+                </div>
               </div>
             </div>
 
@@ -1147,6 +994,7 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
               <button
                 type="button"
                 onClick={() => {
+                  setCustomNoteInput('');
                   if (onUpdateShift) {
                     const targetShift = shifts.find((s) => s.id === editingShiftNote.shiftId);
                     if (targetShift) {
@@ -1155,9 +1003,10 @@ export const MonthlyReportView: React.FC<MonthlyReportViewProps> = ({
                   }
                   setEditingShiftNote(null);
                 }}
-                className="px-3 py-1.5 text-xs text-slate-600 hover:text-red-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                className="text-xs text-slate-500 hover:text-red-600 underline flex items-center gap-1 cursor-pointer"
               >
-                Svuota (ripristina automatica)
+                <RotateCcw className="w-3 h-3" />
+                <span>Ripristina Default</span>
               </button>
 
               <div className="flex items-center gap-2">

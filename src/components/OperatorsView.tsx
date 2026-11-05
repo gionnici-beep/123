@@ -243,11 +243,161 @@ export const OperatorsView: React.FC<OperatorsViewProps> = ({
     setIsEditing(false);
   };
 
+  // Export handlers
+  const handleExportCSV = () => {
+    const headers = ['Nome', 'Ruolo', 'Ambito', 'Email', 'Telefono', 'MaxGiorniMese', 'Attivo'];
+    const rows = operators.map((o) => [
+      `"${o.name.replace(/"/g, '""')}"`,
+      `"${o.role.replace(/"/g, '""')}"`,
+      `"${o.ambito || 'SOR'}"`,
+      `"${o.email}"`,
+      `"${o.phone}"`,
+      o.maxDaysPerMonth,
+      o.active ? 'Sì' : 'No',
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map((r) => r.join(';'))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Reperibili_Protezione_Civile_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setIsExportMenuOpen(false);
+    setNotificationMsg('Dati reperibili esportati con successo in CSV!');
+    setTimeout(() => setNotificationMsg(null), 3000);
+  };
+
+  const handleExportJSON = () => {
+    const dataStr = JSON.stringify(operators, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Reperibili_Protezione_Civile_${new Date().toISOString().slice(0, 10)}.json`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setIsExportMenuOpen(false);
+    setNotificationMsg('Dati reperibili esportati con successo in JSON!');
+    setTimeout(() => setNotificationMsg(null), 3000);
+  };
+
+  // Import handler
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportFileName(file.name);
+    setImportError(null);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      try {
+        if (file.name.endsWith('.json') || content.trim().startsWith('[')) {
+          const parsed = JSON.parse(content);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setImportedPreview(parsed);
+            setIsImportModalOpen(true);
+          } else {
+            setImportError('Il file JSON non contiene un array valido di reperibili.');
+          }
+        } else {
+          // Parse CSV
+          const parsed = parseOperatorsCSV(content);
+          if (parsed.length > 0) {
+            setImportedPreview(parsed);
+            setIsImportModalOpen(true);
+          } else {
+            setImportError('Nessun record valido trovato nel file CSV. Assicurarsi che ci sia una riga di intestazione (Nome, Ruolo, Ambito, Email, Telefono).');
+          }
+        }
+      } catch (err: any) {
+        setImportError(`Errore durante la lettura del file: ${err.message || 'formato non supportato'}`);
+      }
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleConfirmImport = () => {
+    if (!importedPreview || importedPreview.length === 0) return;
+
+    const validAmbiti: AmbitoType[] = ['SOR', 'CF', 'VAL', 'CT', 'LV'];
+    const formatted: Operator[] = importedPreview.map((item, idx) => {
+      const amb: AmbitoType = validAmbiti.includes(item.ambito as AmbitoType) ? (item.ambito as AmbitoType) : 'SOR';
+      const c = AMBITO_COLORS[amb] || '#2563eb';
+      return {
+        id: item.id || `op-${Date.now()}-${idx}`,
+        name: item.name || `Operatore ${idx + 1}`,
+        role: item.role || `Operatore ${amb}`,
+        ambito: amb,
+        email: item.email || `${item.name?.toLowerCase().replace(/[^a-z0-9]/g, '.') || 'operatore'}@protezionecivile.umbria.it`,
+        phone: item.phone || '+39 3',
+        color: item.color || c,
+        bgColor: item.bgColor || `${c}15`,
+        textColor: item.textColor || c,
+        active: item.active !== undefined ? Boolean(item.active) : true,
+        maxDaysPerMonth: item.maxDaysPerMonth || 6,
+      };
+    });
+
+    if (importMode === 'replace') {
+      if (onBulkSetOperators) {
+        onBulkSetOperators(formatted);
+      } else {
+        formatted.forEach((op) => onAddOperator(op));
+      }
+      setNotificationMsg(`Importazione completata: ${formatted.length} reperibili caricati.`);
+    } else {
+      // Merge mode
+      if (onBulkSetOperators) {
+        const existingNames = new Set(operators.map((o) => o.name.toLowerCase().trim()));
+        const toAdd = formatted.filter((f) => !existingNames.has(f.name.toLowerCase().trim()));
+        onBulkSetOperators([...operators, ...toAdd]);
+        setNotificationMsg(`Importazione completata: ${toAdd.length} nuovi reperibili aggiunti all'organico esistente.`);
+      } else {
+        formatted.forEach((op) => onAddOperator(op));
+        setNotificationMsg(`Importazione completata: ${formatted.length} reperibili inseriti.`);
+      }
+    }
+
+    setIsImportModalOpen(false);
+    setImportedPreview(null);
+    setTimeout(() => setNotificationMsg(null), 4000);
+  };
+
   const ambitiList: AmbitoType[] = ['SOR', 'CF', 'VAL', 'CT', 'LV'];
 
   return (
     <div className="space-y-6">
-      {/* Header and Add button */}
+      {/* Hidden File Input for CSV/JSON Import */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv,.json,text/csv,application/json"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+
+      {/* Notification Toast */}
+      {notificationMsg && (
+        <div className="bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-md text-xs font-semibold flex items-center justify-between animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>{notificationMsg}</span>
+          </div>
+          <button onClick={() => setNotificationMsg(null)} className="text-white/80 hover:text-white cursor-pointer">
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Header and Add / Import / Export buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-xs">
         <div>
           <div className="flex items-center gap-2">
@@ -263,13 +413,57 @@ export const OperatorsView: React.FC<OperatorsViewProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={() => handleOpenAdd()}
-          className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors whitespace-nowrap self-start sm:self-auto cursor-pointer"
-        >
-          <UserPlus className="w-4 h-4" />
-          <span>Aggiungi Reperibile</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          {/* Import Button */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg shadow-2xs transition-colors cursor-pointer"
+            title="Importa reperibili da file CSV o JSON"
+          >
+            <Upload className="w-4 h-4 text-slate-600" />
+            <span>Importa</span>
+          </button>
+
+          {/* Export Dropdown / Menu */}
+          <div className="relative">
+            <button
+              onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg shadow-2xs transition-colors cursor-pointer"
+              title="Esporta elenco reperibili"
+            >
+              <Download className="w-4 h-4 text-slate-600" />
+              <span>Esporta</span>
+            </button>
+
+            {isExportMenuOpen && (
+              <div className="absolute right-0 mt-1.5 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-30 animate-in fade-in zoom-in-95 duration-100">
+                <button
+                  onClick={handleExportCSV}
+                  className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                  <span>Esporta CSV (Excel)</span>
+                </button>
+                <button
+                  onClick={handleExportJSON}
+                  className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
+                >
+                  <FileJson className="w-4 h-4 text-blue-600" />
+                  <span>Esporta JSON</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Add Operator Button */}
+          <button
+            onClick={() => handleOpenAdd()}
+            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors whitespace-nowrap cursor-pointer"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>Aggiungi Reperibile</span>
+          </button>
+        </div>
       </div>
 
       {/* Ambito Navigation Tabs */}
@@ -606,6 +800,118 @@ export const OperatorsView: React.FC<OperatorsViewProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Import Preview Modal */}
+      {isImportModalOpen && importedPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="bg-white rounded-xl max-w-2xl w-full p-6 shadow-xl border border-slate-200 space-y-4 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className="p-2 bg-blue-100 text-blue-700 rounded-lg">
+                  <Upload className="w-5 h-5" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Anteprima Importazione Reperibili
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    File: <strong>{importFileName}</strong> · {importedPreview.length} record rilevati
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsImportModalOpen(false);
+                  setImportedPreview(null);
+                }}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-md cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Import Mode Options */}
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs space-y-2">
+              <span className="font-semibold text-slate-800 block">Modalità di importazione:</span>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="importMode"
+                    value="merge"
+                    checked={importMode === 'merge'}
+                    onChange={() => setImportMode('merge')}
+                    className="text-blue-600"
+                  />
+                  <span>
+                    <strong>Unisci (Merge)</strong>: aggiunge solo i nominativi non ancora presenti
+                  </span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="importMode"
+                    value="replace"
+                    checked={importMode === 'replace'}
+                    onChange={() => setImportMode('replace')}
+                    className="text-red-600"
+                  />
+                  <span>
+                    <strong className="text-rose-700">Sostituisci Tutto</strong>: sovrascrive l'intero organico
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* Preview table */}
+            <div className="flex-1 overflow-y-auto border border-slate-200 rounded-lg">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead className="bg-slate-100 text-slate-700 sticky top-0 border-b border-slate-200">
+                  <tr>
+                    <th className="py-2 px-3">Nome</th>
+                    <th className="py-2 px-3">Ambito</th>
+                    <th className="py-2 px-3">Ruolo</th>
+                    <th className="py-2 px-3">Telefono</th>
+                    <th className="py-2 px-3">Email</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {importedPreview.map((item, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50">
+                      <td className="py-2 px-3 font-semibold text-slate-900">{item.name || '—'}</td>
+                      <td className="py-2 px-3 font-mono font-bold text-blue-700">{item.ambito || 'SOR'}</td>
+                      <td className="py-2 px-3 text-slate-600">{item.role || '—'}</td>
+                      <td className="py-2 px-3 font-mono text-slate-600">{item.phone || '—'}</td>
+                      <td className="py-2 px-3 text-slate-600">{item.email || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsImportModalOpen(false);
+                  setImportedPreview(null);
+                }}
+                className="px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              >
+                Annulla
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmImport}
+                className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <Check className="w-4 h-4" />
+                <span>Conferma e Importa ({importedPreview.length})</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

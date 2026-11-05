@@ -1,13 +1,14 @@
 import React from 'react';
-import { Calendar, Users, List, BarChart3, Download, RefreshCw, FileText, Sparkles } from 'lucide-react';
+import { Calendar, Users, List, BarChart3, Download, RefreshCw, FileText, Sparkles, Bell } from 'lucide-react';
 
 interface HeaderProps {
-  activeTab: 'excel' | 'calendar' | 'table' | 'matrix' | 'operators' | 'report';
-  setActiveTab: (tab: 'excel' | 'calendar' | 'table' | 'matrix' | 'operators' | 'report') => void;
+  activeTab: 'excel' | 'calendar' | 'table' | 'matrix' | 'operators' | 'report' | 'notifications';
+  setActiveTab: (tab: 'excel' | 'calendar' | 'table' | 'matrix' | 'operators' | 'report' | 'notifications') => void;
   onOpenExport: () => void;
   onOpenHolidays: () => void;
   onRegenerate: () => void;
   totalShifts: number;
+  dueNotificationsCount?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -17,6 +18,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenHolidays,
   onRegenerate,
   totalShifts,
+  dueNotificationsCount = 0,
 }) => {
   return (
     <header className="border-b border-slate-200 bg-white sticky top-0 z-30 shadow-xs">
@@ -64,10 +66,27 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button
+              onClick={() => setActiveTab('notifications')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-md transition-colors whitespace-nowrap relative ${
+                activeTab === 'notifications'
+                  ? 'bg-rose-700 text-white shadow-xs'
+                  : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+            >
+              <Bell className="w-4 h-4 text-rose-300" />
+              <span>Notifiche 48h</span>
+              {dueNotificationsCount > 0 && (
+                <span className="ml-1 px-1.5 py-0.2 text-[10px] font-black rounded-full bg-amber-400 text-slate-950">
+                  {dueNotificationsCount}
+                </span>
+              )}
+            </button>
+
+            <button
               onClick={() => setActiveTab('calendar')}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
                 activeTab === 'calendar'
-                  ? 'bg-slate-900 text-white shadow-xs'
+                  ? 'bg-slate-900 text-white shadow-xs font-bold'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >

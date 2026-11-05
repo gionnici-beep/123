@@ -8,6 +8,7 @@ import { Header } from './components/Header';
 import { RulesBanner } from './components/RulesBanner';
 import { ExcelColumnView } from './components/ExcelColumnView';
 import { MonthlyReportView } from './components/MonthlyReportView';
+import { NotificationsView } from './components/NotificationsView';
 import { CalendarView } from './components/CalendarView';
 import { ShiftsTableView } from './components/ShiftsTableView';
 import { MonthlyMatrixView } from './components/MonthlyMatrixView';
@@ -83,14 +84,29 @@ export default function App() {
     return generateTurniSchedule(DEFAULT_OPERATORS);
   });
 
-  // Navigation tab: 'excel' (default) | 'report' | 'calendar' | 'table' | 'matrix' | 'operators'
-  const [activeTab, setActiveTab] = useState<'excel' | 'report' | 'calendar' | 'table' | 'matrix' | 'operators'>('excel');
+  // Navigation tab: 'excel' (default) | 'report' | 'notifications' | 'calendar' | 'table' | 'matrix' | 'operators'
+  const [activeTab, setActiveTab] = useState<'excel' | 'report' | 'notifications' | 'calendar' | 'table' | 'matrix' | 'operators'>('excel');
 
   // Modals state
   const [selectedShiftForDetail, setSelectedShiftForDetail] = useState<Shift | null>(null);
   const [selectedShiftForSwap, setSelectedShiftForSwap] = useState<Shift | null>(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isHolidaysOpen, setIsHolidaysOpen] = useState(false);
+
+  // Count notifications due within 48h (checking first shift starting 2027-01-05 09:00, or current real date)
+  const dueNotificationsCount = useMemo(() => {
+    // Check with 2027-01-03 reference or today
+    const refTime = new Date('2027-01-03T09:00:00').getTime();
+    let count = 0;
+    shifts.forEach((s) => {
+      const diffHours = (new Date(s.startDate).getTime() - refTime) / (3600 * 1000);
+      if (diffHours <= 48 && diffHours >= 0) {
+        // 5 ambiti
+        count += 5;
+      }
+    });
+    return count;
+  }, [shifts]);
 
   // Save changes to localStorage
   useEffect(() => {
@@ -223,6 +239,7 @@ export default function App() {
         onOpenHolidays={() => setIsHolidaysOpen(true)}
         onRegenerate={handleRegenerate}
         totalShifts={shifts.length}
+        dueNotificationsCount={dueNotificationsCount}
       />
 
       {/* Main Container */}
@@ -251,6 +268,13 @@ export default function App() {
             operators={operators}
             onSelectShift={(shift) => setSelectedShiftForDetail(shift)}
             onUpdateShift={handleSaveShift}
+          />
+        )}
+
+        {activeTab === 'notifications' && (
+          <NotificationsView
+            shifts={shifts}
+            operators={operators}
           />
         )}
 
